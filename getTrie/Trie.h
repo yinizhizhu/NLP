@@ -12,14 +12,6 @@ typedef unsigned short Unicode;
 
 using namespace std;
 
-class TrieNode;
-typedef struct dataUnit
-{
-	Unicode word;
-	size_t counter;		//the total number of the word, so far
-	vector<TrieNode*> pre;		//the preTrieNode of this TrieNode
-} dataUint;
-
 class TrieNode
 {
 public:
@@ -27,6 +19,12 @@ public:
 	~TrieNode();
 	TrieNode* findNext(Unicode word);
 public:
+	typedef struct dataUnit
+	{
+		Unicode word;
+		size_t counter;		//the total number of the word, so far
+		vector<TrieNode*> pre;		//the preTrieNode of this TrieNode
+	} dataUint;
 	typedef unordered_map<Unicode, TrieNode*> NextMap;
 	TrieNode* pre;
 	NextMap* next;
@@ -39,10 +37,12 @@ public:
 	Trie();
 	~Trie();
 public:
-	TrieNode* findTrieNode(const vector<Unicode>& words);
 	void build();
+	TrieNode* findTrieNode(const vector<Unicode>& words);
 	TrieNode* insertTrie(const vector<Unicode>& words);
 	void deleteNode(TrieNode* node);
+	void showTrie(TrieNode *node);
+	void showTrieNode(TrieNode* node);
 private:
 	TrieNode* root;
 };
