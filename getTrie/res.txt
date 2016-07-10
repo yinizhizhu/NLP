@@ -46398,3 +46398,7 @@
 ßÞ: 0, à¡: 1, 
 ÕÝ: 0, ¾Ó: 1, 
 ÃÂ: 1, 
+
+The total number of words is: 947665
+
+The running time is: 24s
