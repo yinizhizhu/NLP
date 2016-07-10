@@ -37,6 +37,7 @@ Trie::Trie()	//initial
 		cout << "The room is not enough for root!" << endl;
 		return;
 	}
+	total = 0;
 	return;
 }
 
@@ -65,6 +66,7 @@ Trie::~Trie()	// free the room
 			delete tmp;
 		}
 	}
+	out << "The total number of words is: " << total << endl;
 	out.close();
 	cout << "Out delete Trie" << endl;
 	return;
@@ -79,8 +81,8 @@ void Trie::build()		//build up the Trie Tree
 	TrieNode *preTrieNode = root;
 	TrieNode *curTrieNode = NULL;
 
-	//ifstream in("testData.txt");
-	ifstream in("trainingData.txt");
+	ifstream in("testData.txt");
+	//ifstream in("trainingData.txt");
 	string container;
 	while (!in.eof())
 	{
@@ -99,6 +101,7 @@ void Trie::build()		//build up the Trie Tree
 				{
 					if (!words.empty())
 					{
+						total++;
 						curTrieNode = insertTrie(words);
 						if (preTrieNode && curTrieNode)		//store the preTrieNode to get the relation in position
 							curTrieNode->dataValue.pre.push_back(preTrieNode);

@@ -45,6 +45,7 @@ public:
 	void showTrieNode(TrieNode* node);
 private:
 	TrieNode* root;
+	size_t total;
 };
 
 Unicode charToUni(char tmp[3]);
