@@ -13,6 +13,7 @@ int main()
 	//cout << test.dataValue.counter << endl;
 	Trie test;
 	test.build();
-	//test.showTrie(NULL);
+	vector<TrieNode*> words;
+	test.showTrie(NULL, words);
 	return 0;
 }

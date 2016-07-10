@@ -1,47 +1,46 @@
 #include "../h/Trie.h"
 
-TrieNode::TrieNode()
+ofstream out("RESULT/res.txt");
+
+TrieNode::TrieNode()	//Initial
 {
-	cout << "In Node" << endl;
 	pre = NULL;
-	next = NULL;
-	dataValue.counter = 0;
-	cout << "Out Node" << endl;
-	return;
-}
-
-TrieNode::~TrieNode()
-{
-	cout << "In delete node" << endl;
-	if (next)			//the pointer need checking before using
-		next->clear();
-	delete pre;
-	delete next;
-	cout << "out delete node" << endl;
-	return;
-}
-
-TrieNode* TrieNode::findNext(Unicode word)
-{
+	next = new NextMap;
 	if (next == NULL)
-		return NULL;
+	{
+		cout << "The room is not enough for TrieNode!" << endl;
+		return;
+	}
+	dataValue.counter = 0;
+	return;
+}
+
+TrieNode::~TrieNode()	//free the room
+{
+	delete next;
+	return;
+}
+
+TrieNode* TrieNode::findNext(Unicode word)	// get the next TrieNode
+{
 	NextMap::const_iterator iter = next->find(word);
 	if (iter == next->end())
 		return NULL;
 	return iter->second;
 }
 
-Trie::Trie()
+Trie::Trie()	//initial
 {
-	cout << "In Trie" << endl;
 	root = new TrieNode;
-	root->pre = NULL;
-	root->next = new unordered_map<Unicode, TrieNode*>;
-	cout << "Out Trie" << endl;
+	if (root == NULL)
+	{
+		cout << "The room is not enough for root!" << endl;
+		return;
+	}
 	return;
 }
 
-Trie::~Trie()
+Trie::~Trie()	// free the room 
 {
 	cout << "In delete Trie" << endl;
 	TrieNode* tmp = NULL;
@@ -54,32 +53,34 @@ Trie::~Trie()
 		for (; i < len; i++)
 		{
 			tmp = container.front();
-			if (tmp->next)
+			if (tmp)
 			{
 				moveIter = tmp->next->begin();
 				endIter = tmp->next->end();
 				for (; moveIter != endIter; moveIter++)
 					container.push(moveIter->second);
+				tmp->next->clear();
 			}
 			container.pop();		//pop the front element of the queue
 			delete tmp;
 		}
 	}
+	out.close();
 	cout << "Out delete Trie" << endl;
 	return;
 }
 
-void Trie::build()
+void Trie::build()		//build up the Trie Tree
 {
-	cout << "In build" << endl;
 	char tmp[3];
 	tmp[2] = 0;
 	vector<Unicode> words;
 
-	TrieNode *preTrieNode = NULL;
+	TrieNode *preTrieNode = root;
 	TrieNode *curTrieNode = NULL;
 
-	ifstream in("testData.txt");
+	//ifstream in("testData.txt");
+	ifstream in("trainingData.txt");
 	string container;
 	while (!in.eof())
 	{
@@ -89,17 +90,21 @@ void Trie::build()
 			tmp[0] = container[i];
 			if (getSerialOne(tmp[0]) == 0)
 			{
-				if (words.size() > 0)
+				if (container[i + 1] == 'w' && container[i] == '/')
 				{
-					curTrieNode = insertTrie(words);
-					if (preTrieNode && curTrieNode)		//store the preTrieNode to get the relation in position
-						curTrieNode->dataValue.pre.push_back(preTrieNode);
-					preTrieNode = curTrieNode;
-				}
-				if (tmp[0] == 'w')
-				{
-					preTrieNode = NULL;
+					preTrieNode = root;
 					words.clear();
+				}
+				else
+				{
+					if (!words.empty())
+					{
+						curTrieNode = insertTrie(words);
+						if (preTrieNode && curTrieNode)		//store the preTrieNode to get the relation in position
+							curTrieNode->dataValue.pre.push_back(preTrieNode);
+						preTrieNode = curTrieNode;
+						words.clear();
+					}
 				}
 				i++;
 			}
@@ -115,26 +120,24 @@ void Trie::build()
 	return;
 }
 
-TrieNode* Trie::findTrieNode(const vector<Unicode>& words)
+TrieNode* Trie::findTrieNode(const vector<Unicode>& words)		//get TrieNode of the words
 {
 	TrieNode *move = root;
-	if (move->next)
+	size_t i = 0, len = words.size();
+	for (; i < len; i++)
 	{
-		size_t i = 0, len = words.size();
-		for (; i < len; i++)
-		{
-			move = move->findNext(words[i]);
-			if (move == NULL)
-				return NULL;
-		}
+		move = move->findNext(words[i]);
+		if (move == NULL)
+			return NULL;
 	}
 	return move;
 }
 
-TrieNode* Trie::insertTrie(const vector<Unicode>& words)
+TrieNode* Trie::insertTrie(const vector<Unicode>& words)		//insert the words into the Trie
 {
 	if (words.size() == 0)
 		return NULL;
+
 	TrieNode *pre = NULL;
 	TrieNode *cur = findTrieNode(words);
 	if (cur)
@@ -147,80 +150,97 @@ TrieNode* Trie::insertTrie(const vector<Unicode>& words)
 	else
 	{
 		size_t pos = 0, len = words.size();
-		cur = root;
+		pre = cur = root;
 		while (cur->next->size())
 		{
-			pre = cur;
 			cur = cur->findNext(words[pos]);
 			if (cur)
+			{
+				pre = cur;
 				pos++;
+			}
 			else
 				break;
 		}
-		for (; pos < len-1; pos++)		//step by step
+		for (; pos < len - 1; pos++)		//step by step
 		{
 			cur = new TrieNode;
-			cur->dataValue.word = words[pos];
-			if (pre)
+			if (cur == NULL)
 			{
-				pre->next->insert(unordered_map<Unicode, TrieNode*>::value_type(words[pos], cur));
-				cur->pre = pre;
+				cout << "The room is not enough for cur!" << endl;
+				return NULL;
 			}
+			cur->pre = pre;
+			cur->dataValue.word = words[pos];
+			pre->next->insert(unordered_map<Unicode, TrieNode*>::value_type(words[pos], cur));
 			pre = cur;
 		}
 		cur = new TrieNode;				//finish the last step
-		if (pre)
+		if (cur == NULL)
 		{
-			pre->next->insert(unordered_map<Unicode, TrieNode*>::value_type(words[pos], cur));
-			cur->pre = pre;
+			cout << "The room is not enough for cur!" << endl;
+			return NULL;
 		}
+		cur->pre = pre;
 		cur->dataValue.word = words[pos];
 		cur->dataValue.counter++;
+		pre->next->insert(unordered_map<Unicode, TrieNode*>::value_type(words[pos], cur));
 	}
 	return cur;
 }
 
-void Trie::deleteNode(TrieNode* node)
+void Trie::deleteNode(TrieNode* node)	//delete the all the nodes(Trie tree)
 {
-	if (node->next)
+	unordered_map<Unicode, TrieNode*>::iterator iter = node->next->begin();
+	for (; iter != node->next->end(); iter++)
+		deleteNode(iter->second);
+	delete node;
+	return;
+}
+
+void Trie::showTrie(TrieNode *node, vector<TrieNode*>& words)		//show each word of Trie
+{
+	TrieNode *move;
+	if (node)
+		move = node;
+	else
+		move = root;
+	if (move->next->size() == 0)
 	{
-		unordered_map<Unicode, TrieNode*>::iterator iter = node->next->begin();
-		for (; iter != node->next->end(); iter++)
-			deleteNode(iter->second);
-		delete node;
+		if (!words.empty())
+		{
+			for (size_t i = 0; i < words.size(); i++)
+				showTrieNode(words[i]);
+			//cout << endl;
+			out << endl;
+		}
+		return;
+	}
+	unordered_map<Unicode, TrieNode*>::iterator iter = move->next->begin();
+	for (; iter != move->next->end(); iter++)
+	{
+		words.push_back(iter->second);
+		showTrie(iter->second, words);
+		words.pop_back();
 	}
 	return;
 }
 
-void Trie::showTrie(TrieNode *node)
-{
-	if (node == NULL)
-		node = root;
-	if (root->next->size() > 0)
-	{
-		unordered_map<Unicode, TrieNode*>::iterator iter = node->next->begin();
-		for (; iter != node->next->end(); iter++)
-			showTrieNode(iter->second);
-		cout << endl;
-	}
-	return;
-}
-
-void Trie::showTrieNode(TrieNode *node)
+void Trie::showTrieNode(TrieNode *node)		//show the content of the TrieNode
 {
 	char tmp[3];
 	UniToChar(node->dataValue.word, tmp);
-	cout << tmp << ": ";
-	cout << node->dataValue.counter << ", ";
+	//cout << tmp << ": " << node->dataValue.counter << ", ";
+	out << tmp << ": " << node->dataValue.counter << ", ";
 	return;
 }
 
-Unicode charToUni(char tmp[3])
+Unicode charToUni(char tmp[3])		//Unicode into two chars
 {
 	return (((Unicode)tmp[0] << 8) | ((Unicode)tmp[1] & 0x00FF));
 }
 
-void UniToChar(Unicode word, char tmp[3])
+void UniToChar(Unicode word, char tmp[3])		//two chars into Unicode
 {
 	tmp[0] = (word >> 8);
 	tmp[1] = (word & 0xFF);
@@ -228,7 +248,7 @@ void UniToChar(Unicode word, char tmp[3])
 	return;
 }
 
-int getSerialOne(char byte)
+int getSerialOne(char byte)		//calculate the number of first continuous one
 {
 	int counter = 0;
 	unsigned int tag = 1 << 7;
@@ -240,7 +260,7 @@ int getSerialOne(char byte)
 	return counter;
 }
 
-void test()
+void test()		//for test the reading data from file
 {
 	ifstream in("testData.txt");
 	string container;

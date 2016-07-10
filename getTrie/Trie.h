@@ -41,7 +41,7 @@ public:
 	TrieNode* findTrieNode(const vector<Unicode>& words);
 	TrieNode* insertTrie(const vector<Unicode>& words);
 	void deleteNode(TrieNode* node);
-	void showTrie(TrieNode *node);
+	void showTrie(TrieNode *node, vector<TrieNode*>& words);
 	void showTrieNode(TrieNode* node);
 private:
 	TrieNode* root;
