@@ -24,13 +24,13 @@ int main()
 
 	seg test;
 	test.readData();
+	test.readSymbol();
 	test.control();
-	test.showInitM();
-	test.showProbM();
-	test.showEmitM();
-	test.showState();
+	//test.showInitM();
+	//test.showProbM();
+	//test.showEmitM();
+	//test.showState();
 
-	
 	end = time(NULL);
 	cout << "The running time is: " << difftime(end, start) << "s" << endl;
 	return 0;

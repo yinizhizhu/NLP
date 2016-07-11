@@ -1,6 +1,15 @@
 #include "../h/Trie.h"
 
-ofstream out("RESULT/res1.txt");
+//#define OUT
+//#define OUTSYMBOL
+
+#ifdef OUTSYMBOL
+ofstream outSymbol("RESULT/symbol.txt");
+#endif
+
+#ifdef OUT
+ofstream out("RESULT/res.txt");
+#endif
 
 TrieNode::TrieNode()	//Initial
 {
@@ -70,7 +79,12 @@ Trie::~Trie()	// free the room
 	}
 	//out << "The total number of word is: " << totalWord << endl;
 	//out << "The total number of words is: " << totalWords << endl;
+#ifdef OUTSYMBOL
+	outSymbol.close();
+#endif
+#ifdef OUT
 	out.close();
+#endif
 	cout << "Out delete Trie" << endl;
 	return;
 }
@@ -99,6 +113,9 @@ void Trie::build()		//build up the Trie Tree
 				if (container[i + 1] == 'w' && container[i] == '/')
 				{
 					//preTrieNode = root;
+#ifdef OUTSYMBOL
+					insertTrie(words);
+#endif
 					words.clear();
 					len1 = len2 = 0;
 				}
@@ -108,8 +125,10 @@ void Trie::build()		//build up the Trie Tree
 					{
 						totalWords++;	//count the words
 						//curTrieNode = insertTrie(words);
+#ifndef OUTSYMBOL
 						insertTrie(words);
 						len2 = insertWordContainer(words);
+#endif
 						if (len1 == 0)
 						{
 							if (len2 == 1)
@@ -318,10 +337,18 @@ void Trie::showTrie(TrieNode *node, vector<TrieNode*>& words)		//show each word 
 	{
 		if (!words.empty())
 		{
+#ifdef OUTSYMBOL
+			outSymbol << words.size() << " ";
+#endif
 			for (size_t i = 0; i < words.size(); i++)
 				showTrieNode(words[i]);
 			//cout << endl;
+#ifdef OUTSYMBOL
+			outSymbol<<endl;
+#endif
+#ifdef OUT
 			out << endl;
+#endif
 		}
 		return;
 	}
@@ -340,7 +367,12 @@ void Trie::showTrieNode(TrieNode *node)		//show the content of the TrieNode
 	char tmp[3];
 	UniToChar(node->dataValue.word, tmp);
 	//cout << tmp << ": " << node->dataValue.counter << ", ";
+#ifdef OUTSYMBOL
+	outSymbol << tmp;
+#endif
+#ifdef OUT
 	out << tmp << ": " << node->dataValue.counter << ", ";
+#endif
 	return;
 }
 
@@ -349,55 +381,75 @@ void Trie::showContainer()
 	char tmp[3];
 	unordered_map<Unicode, size_t>::iterator iter;
 	
-	iter= wordContainer.begin();
+	iter = wordContainer.begin();
+#ifdef OUT
 	out << wordContainer.size() << endl;
+#endif
 	for (; iter != wordContainer.end(); iter++)
 	{
 		UniToChar(iter->first, tmp);
 		//cout << tmp << ": " << iter->second << ",";
+#ifdef OUT
 		out << tmp << endl;
+#endif
 	}
 	////cout << endl;
 	//out << endl;
 	//out << "Total number of words which are unique: " << counter << endl;
-	
+
+#ifdef OUT
 	out << BContainer.size() << endl;
+#endif
 	iter = BContainer.begin();
 	for (; iter != BContainer.end(); iter++)
 	{
 		UniToChar(iter->first, tmp);
 		//cout << tmp << ": " << iter->second << ",";
+#ifdef OUT
 		out << tmp << " " << log(double(iter->second*1.0 / totalWord)) << endl;
+#endif
 	}
 	//cout << endl;
 
+#ifdef OUT
 	out << MContainer.size() << endl;
+#endif
 	iter = MContainer.begin();
 	for (; iter != MContainer.end(); iter++)
 	{
 		UniToChar(iter->first, tmp);
 		//cout << tmp << ": " << iter->second << ",";
+#ifdef OUT
 		out << tmp << " " << log(double(iter->second*1.0 / totalWord)) << endl;
+#endif
 	}
 	//cout << endl;
 
+#ifdef OUT
 	out << EContainer.size() << endl;
+#endif
 	iter = EContainer.begin();
 	for (; iter != EContainer.end(); iter++)
 	{
 		UniToChar(iter->first, tmp);
 		//cout << tmp << ": " << iter->second << ",";
+#ifdef OUT
 		out << tmp << " " << log(double(iter->second*1.0 / totalWord)) << endl;
+#endif
 	}
 	//cout << endl;
 
+#ifdef OUT
 	out << SContainer.size() << endl;
+#endif
 	iter = SContainer.begin();
 	for (; iter != SContainer.end(); iter++)
 	{
 		UniToChar(iter->first, tmp);
 		//cout << tmp << ": " << iter->second << ",";
+#ifdef OUT
 		out << tmp << " " << log(double(iter->second*1.0 / totalWord)) << endl;
+#endif
 	}
 	//cout << endl;
 
@@ -420,15 +472,17 @@ void Trie::showContainer()
 	//out << "M	" << "0	" << log(double(totalMM*1.0 / totalM)) << "	" << log(double(totalME*1.0 / totalM)) << "	" << "0" << endl;
 	//out << "E	" << log(double(totalEB*1.0 / totalE)) << "	" << "0	" << "0" << "	" << log(double(totalES*1.0 / totalE)) << endl;
 	//out << "S	" << log(double(totalSB*1.0 / totalS)) << "	" << "0	" << "0" << "	" << log(double(totalSS*1.0 / totalS)) << endl;
+#ifdef OUT
 	out << "4"<< endl;
-	out << "0 " << log(double(totalBM*1.0 / totalB)) << " " << log(double(totalBE*1.0 / totalB)) << " 0 " << endl;
-	out << "0 " << log(double(totalMM*1.0 / totalM)) << " " << log(double(totalME*1.0 / totalM)) << " 0 " << endl;
-	out << log(double(totalEB*1.0 / totalE)) << " 0 0 " << log(double(totalES*1.0 / totalE)) << " " << endl;
-	out << log(double(totalSB*1.0 / totalS)) << " 0 0 " << log(double(totalSS*1.0 / totalS)) << " " << endl;
+	out << "-3.14e+100 " << log(double(totalBM*1.0 / totalB)) << " " << log(double(totalBE*1.0 / totalB)) << " -3.14e+100 " << endl;
+	out << "-3.14e+100 " << log(double(totalMM*1.0 / totalM)) << " " << log(double(totalME*1.0 / totalM)) << " -3.14e+100 " << endl;
+	out << log(double(totalEB*1.0 / totalE)) << " -3.14e+100 -3.14e+100 " << log(double(totalES*1.0 / totalE)) << " " << endl;
+	out << log(double(totalSB*1.0 / totalS)) << " -3.14e+100 -3.14e+100 " << log(double(totalSS*1.0 / totalS)) << " " << endl;
 
 	//out << totalBF << ", " << totalSF << endl;
 	out << "1" << endl;
-	out << log(double(totalBF*1.0 / totalWord)) << " 0 0 " << log(double(totalSF*1.0 / totalWord)) << " " << endl;
+	out << log(double(totalBF*1.0 / totalWord)) << " -3.14e+100 -3.14e+100 " << log(double(totalSF*1.0 / totalWord)) << " " << endl;
+#endif
 	return;
 }
 

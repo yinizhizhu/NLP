@@ -21,39 +21,83 @@ seg::seg()
 
 seg::~seg()
 {
+	segOut.close();
 	return;
 }
 
 void seg::control()
 {
 	cout << "In control" << endl;
-	ifstream in("devTest.txt");
+	ifstream in("dev.txt");
+	//ifstream in("devTest.txt");
 
-	size_t i, len;
+	size_t i, j, len;
 	string container;
 
 	char tmp[3];
 	tmp[2] = 0;
-
+	Unicode one;
 	vector<Unicode> words;
 	vector<char> state;
 
-	getline(in, container);
-	len = container.size();
-	for (i = 0; i < len; i += 2)
+	while (!in.eof())
 	{
-		tmp[0] = container[i];
-		tmp[1] = container[i + 1];
-		words.push_back(charToUni(tmp));
-	}
+		getline(in, container);
+		for (i = 0; i < container.size();)
+		{
+			tmp[0] = container[i];
+			tmp[1] = container[i + 1];
+			one = charToUni(tmp);
 
-	divider(words, state);
-	for (i = 0; i < len; i++)
-		cout << state[i];
-	cout << endl;
+			len = findSymbol(one);
+			if (len)
+			{
+				eachWords(words, state);
+				for (j = 0; j < (len * 2); j++)
+					segOut << container[i + j];
+				segOut << '/';
+				i += len * 2;
+			}
+			else
+			{
+				words.push_back(one);
+				i += 2;
+			}
+		}
+		if (!words.empty())
+			eachWords(words, state);
+		segOut << endl;
+	}
 	cout << "Out control" << endl;
 
 	in.close();
+}
+
+void seg::eachWords(vector<Unicode>& words, vector<char>& state)
+{
+	char tmp[3];
+	size_t j;
+	if (words.size() > 0)
+	{
+		divider(words, state);
+
+		UniToChar(words[0], tmp);
+		segOut << tmp;
+		if (state[0] == 'S')
+		{
+			segOut << '/';
+		}
+		for (j = 1; j < state.size(); j++)
+		{
+			UniToChar(words[j], tmp);
+			segOut << tmp;
+			if (state[j] == 'E' || state[j] == 'S')
+				segOut << '/';
+		}
+		words.clear();
+		state.clear();
+	}
+	return;
 }
 
 void seg::divider(vector<Unicode>& words, vector<char>& state)
@@ -77,14 +121,14 @@ void seg::divider(vector<Unicode>& words, vector<char>& state)
 		iter = emitM.find(words[0]);
 		if (iter == emitM.end())
 		{
-			UniToChar(words[0], tmp);
+			UniToChar(words[i], tmp);
 			cout << "Cannot find the word: " << tmp << endl;
 			return;
 		}
 		all[0].bestPro[i] = initM[i] * iter->second[i];
-		cout << all[0].bestPro[i] <<" ";//for test
+		//cout << all[0].bestSel[i] <<" ";//for test
 	}
-	cout << endl;//for test
+	//cout << endl;//for test
 
 	for (i = 1; i < len; i++)
 	{
@@ -95,11 +139,19 @@ void seg::divider(vector<Unicode>& words, vector<char>& state)
 			cout << "Cannot find the word: " << tmp << endl;
 			return;
 		}
-		for (j = 0; j < 4; j++)	//the next word
+		for (j = 0; j < 4; j++)	//the cur word
 		{
 			for (k = 0; k < 4; k++)	//the pre word
+				prob[k] = 1000 * all[i - 1].bestPro[k] * probM[k][j] * iter->second[j];
+			if (j == 0 || j == 1)	//B	M	->	M	E
 			{
-				prob[k] = all[i - 1].bestPro[k] * probM[k][j] * iter->second[j];
+				prob[1] /= 1000;
+				prob[2] /= 1000;
+			}
+			else					//E	S	->	B	S
+			{
+				prob[0] /= 1000;
+				prob[3] /= 1000;
 			}
 
 			bestIndex = 0;			//get the best one( Dynamic )
@@ -110,20 +162,58 @@ void seg::divider(vector<Unicode>& words, vector<char>& state)
 			}
 			all[i].bestSel[j] = bestIndex;
 			all[i].bestPro[j] = prob[bestIndex];
+			//cout << all[i].bestSel[j] << " ";	//for test
 		}
+		//cout << endl;	//for test
 	}
 
-	bestIndex = 0;
-	for (i = 1; i < 4; i++)
-	{
-		if (all[len - 1].bestPro[i] < all[len - 1].bestPro[bestIndex])
-			bestIndex = i;
-	}
+	bestIndex = 2;	//E
+	if (all[len - 1].bestPro[3] < all[len - 1].bestPro[3])	//S
+			bestIndex = 3;
+	//for (i = 0; i < 4; i++)
+	//	cout << all[len - 1].bestPro[i] << " ";
+	//cout << endl;
+
+	//cout << len-1 << ":¡¡" << bestIndex << " " << all[len - 1].bestPro[bestIndex] << " " << all[len - 1].bestSel[bestIndex] << endl;
 	state[len - 1] = initState[bestIndex];
-	for (i = len - 2; i >= 1; i--)
+	if (state[len - 1] == 'B')
+	{
+		state[len - 1] = 'S';
+		bestIndex = 3;
+	}
+	else if (state[len - 1] == 'M')
+	{
+		state[len - 1] = 'E';
+		bestIndex = 2;
+	}
+	for (i = len - 2;; i--)
 	{
 		bestIndex = all[i + 1].bestSel[bestIndex];
 		state[i] = initState[bestIndex];
+		//if (bestIndex == 3 || bestIndex == 2) //the pre: E S
+		//{
+		//	if (state[i + 1] == 'M' || state[i + 1] == 'E')
+		//	{
+		//		state[i] = 'B';
+		//	}
+		//	else
+		//	{
+		//		state[i] = 'S';
+		//	}
+		//}
+		//else								//the next: B M
+		//{
+		//	if (state[i + 1] == 'B' || state[i + 1] == 'S')
+		//	{
+		//		state[i] = 'E';
+		//	}
+		//	else
+		//	{
+		//		state[i] = 'M';
+		//	}
+		//}
+		if (i == 0)
+			break;
 	}
 	cout << "Out divider" << endl;
 	return;
@@ -151,7 +241,7 @@ void seg::readData()
 		word = charToUni(tmp);
 		vector<double> newOne;
 		for (j = 0; j < 4; j++)
-			newOne.push_back(-1e-34);
+			newOne.push_back(-3.14e+100);
 		emitM.insert(unordered_map<Unicode, vector<double>>::value_type(word, newOne));
 	}
 
@@ -220,6 +310,39 @@ void seg::readData()
 
 
 	in.close();
+}
+
+void seg::readSymbol()
+{
+	ifstream in("RESULT/symbol.txt");
+	Unicode word;
+
+	char tmp[3], number[9];
+	tmp[2] = 0;
+	string container;
+	for (size_t i = 0; i < 43; i++)
+	{
+		getline(in, container);
+
+		number[0] = container[0];	//get the length
+		number[1] = '\0';
+
+		tmp[0] = container[2];		//get the first word
+		tmp[1] = container[3];
+		word = charToUni(tmp);
+
+		symbol.insert(unordered_map<Unicode, size_t>::value_type(word, atoi(number)));
+	}
+	in.close();
+	return;
+}
+
+size_t seg::findSymbol(Unicode word)
+{
+	unordered_map<Unicode, size_t>::iterator iter = symbol.find(word);
+	if (iter != symbol.end())
+		return iter->second;
+	return 0;
 }
 
 void seg::showInitM()

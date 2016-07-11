@@ -20,7 +20,10 @@ public:
 	seg();
 	~seg();
 	void readData();
+	void readSymbol();					//read the symbol from file
+	size_t findSymbol(Unicode word);	//check whether the Word is in the symbol or not
 	void control();
+	void eachWords(vector<Unicode>& words, vector<char>& state);
 	void divider(vector<Unicode>& words, vector<char>& state);
 	void showInitM();
 	void showProbM();
@@ -31,6 +34,7 @@ private:
 	vector<double> initM;
 	vector<vector<double>> probM;
 	unordered_map<Unicode, vector<double>> emitM;
+	unordered_map<Unicode, size_t> symbol;
 };
 
 #endif
