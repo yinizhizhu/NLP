@@ -1,6 +1,6 @@
 #include "../h/Trie.h"
 
-ofstream out("RESULT/res.txt");
+ofstream out("RESULT/res1.txt");
 
 TrieNode::TrieNode()	//Initial
 {
@@ -37,7 +37,9 @@ Trie::Trie()	//initial
 		cout << "The room is not enough for root!" << endl;
 		return;
 	}
-	total = 0;
+	totalB = totalM = totalE = totalS = 0;
+	totalWord = 0;
+	totalWords = 0;
 	return;
 }
 
@@ -66,7 +68,8 @@ Trie::~Trie()	// free the room
 			delete tmp;
 		}
 	}
-	out << "The total number of words is: " << total << endl;
+	//out << "The total number of word is: " << totalWord << endl;
+	//out << "The total number of words is: " << totalWords << endl;
 	out.close();
 	cout << "Out delete Trie" << endl;
 	return;
@@ -78,11 +81,12 @@ void Trie::build()		//build up the Trie Tree
 	tmp[2] = 0;
 	vector<Unicode> words;
 
-	TrieNode *preTrieNode = root;
-	TrieNode *curTrieNode = NULL;
+	//TrieNode *preTrieNode = root;
+	//TrieNode *curTrieNode = NULL;
+	size_t len1 = 0, len2 = 0;
 
-	ifstream in("testData.txt");
-	//ifstream in("trainingData.txt");
+	//ifstream in("testData.txt");
+	ifstream in("trainingData.txt");
 	string container;
 	while (!in.eof())
 	{
@@ -94,18 +98,43 @@ void Trie::build()		//build up the Trie Tree
 			{
 				if (container[i + 1] == 'w' && container[i] == '/')
 				{
-					preTrieNode = root;
+					//preTrieNode = root;
 					words.clear();
+					len1 = len2 = 0;
 				}
 				else
 				{
 					if (!words.empty())
 					{
-						total++;
-						curTrieNode = insertTrie(words);
-						if (preTrieNode && curTrieNode)		//store the preTrieNode to get the relation in position
-							curTrieNode->dataValue.pre.push_back(preTrieNode);
-						preTrieNode = curTrieNode;
+						totalWords++;	//count the words
+						//curTrieNode = insertTrie(words);
+						insertTrie(words);
+						len2 = insertWordContainer(words);
+						if (len1 == 0)
+						{
+							if (len2 == 1)
+								totalSF++;
+							else
+								totalBF++;
+						}
+						else if (len1 == 1)	//S
+						{
+							if (len2 == 1)	//S->S
+								totalSS++;
+							else			//S->B
+								totalSB++;
+						}
+						else			//E
+						{
+							if (len2 == 1)	//E->S
+								totalES++;
+							else			//E->B
+								totalEB++;
+						}
+						len1 = len2;
+						//if (preTrieNode && curTrieNode)		//store the preTrieNode to get the relation in position
+						//	curTrieNode->dataValue.pre.push_back(preTrieNode);
+						//preTrieNode = curTrieNode;
 						words.clear();
 					}
 				}
@@ -136,23 +165,24 @@ TrieNode* Trie::findTrieNode(const vector<Unicode>& words)		//get TrieNode of th
 	return move;
 }
 
-TrieNode* Trie::insertTrie(const vector<Unicode>& words)		//insert the words into the Trie
+void Trie::insertTrie(const vector<Unicode>& words)		//insert the words into the Trie
 {
 	if (words.size() == 0)
-		return NULL;
+		return;
 
 	TrieNode *pre = NULL;
 	TrieNode *cur = findTrieNode(words);
+	size_t pos = 0, len = words.size();
+	totalWord += len;//count the word
 	if (cur)
 	{
 		if (cur->dataValue.counter > 0)
 			cur->dataValue.word = words.back();
 		cur->dataValue.counter++;
-		return cur;
+		return;
 	}
 	else
 	{
-		size_t pos = 0, len = words.size();
 		pre = cur = root;
 		while (cur->next->size())
 		{
@@ -171,7 +201,7 @@ TrieNode* Trie::insertTrie(const vector<Unicode>& words)		//insert the words int
 			if (cur == NULL)
 			{
 				cout << "The room is not enough for cur!" << endl;
-				return NULL;
+				return;
 			}
 			cur->pre = pre;
 			cur->dataValue.word = words[pos];
@@ -182,14 +212,90 @@ TrieNode* Trie::insertTrie(const vector<Unicode>& words)		//insert the words int
 		if (cur == NULL)
 		{
 			cout << "The room is not enough for cur!" << endl;
-			return NULL;
+			return;
 		}
 		cur->pre = pre;
 		cur->dataValue.word = words[pos];
 		cur->dataValue.counter++;
 		pre->next->insert(unordered_map<Unicode, TrieNode*>::value_type(words[pos], cur));
 	}
-	return cur;
+	return;
+}
+
+size_t Trie::insertWordContainer(const vector<Unicode>& words)
+{
+	size_t i = 0, len = words.size();
+	if (len == 1)
+	{
+		insertContainer(words[i], 3);		//Single
+		totalS++;
+	}
+	else if (len > 1)
+	{
+		insertContainer(words[i], 0);		//Begin
+		totalB++;
+		if (len == 2)
+			totalBE++;
+		else
+		{
+			totalBM++;
+			totalMM += len - 3;
+			totalME++;
+		}
+		for (i = 1; i < (len - 1); i++)
+		{
+			insertContainer(words[i], 1);	//Middle
+			totalM++;
+		}
+		insertContainer(words[i], 2);		//End
+		totalE++;
+	}
+	return len;
+}
+
+void Trie::insertContainer(const Unicode& word, size_t tag)
+{
+	unordered_map<Unicode, size_t>::iterator iter;
+
+	iter = wordContainer.find(word);	//wordContainer
+	if (iter == wordContainer.end())
+		wordContainer.insert(unordered_map<Unicode, size_t>::value_type(word, 1));
+	else
+		iter->second++;
+
+	if (tag == 0)
+	{
+		iter = BContainer.find(word);	//BContainer
+		if (iter == BContainer.end())
+			BContainer.insert(unordered_map<Unicode, size_t>::value_type(word, 1));
+		else
+			iter->second++;
+	}
+	else if (tag == 1)
+	{
+		iter = MContainer.find(word);	//MContainer
+		if (iter == MContainer.end())
+			MContainer.insert(unordered_map<Unicode, size_t>::value_type(word, 1));
+		else
+			iter->second++;
+	}
+	else if (tag == 2)
+	{
+		iter = EContainer.find(word);	//EContainer
+		if (iter == EContainer.end())
+			EContainer.insert(unordered_map<Unicode, size_t>::value_type(word, 1));
+		else
+			iter->second++;
+	}
+	else if (tag == 3)
+	{
+		iter = SContainer.find(word);	//SContainer
+		if (iter == SContainer.end())
+			SContainer.insert(unordered_map<Unicode, size_t>::value_type(word, 1));
+		else
+			iter->second++;
+	}
+	return;
 }
 
 void Trie::deleteNode(TrieNode* node)	//delete the all the nodes(Trie tree)
@@ -235,6 +341,94 @@ void Trie::showTrieNode(TrieNode *node)		//show the content of the TrieNode
 	UniToChar(node->dataValue.word, tmp);
 	//cout << tmp << ": " << node->dataValue.counter << ", ";
 	out << tmp << ": " << node->dataValue.counter << ", ";
+	return;
+}
+
+void Trie::showContainer()
+{
+	char tmp[3];
+	unordered_map<Unicode, size_t>::iterator iter;
+	
+	iter= wordContainer.begin();
+	out << wordContainer.size() << endl;
+	for (; iter != wordContainer.end(); iter++)
+	{
+		UniToChar(iter->first, tmp);
+		//cout << tmp << ": " << iter->second << ",";
+		out << tmp << endl;
+	}
+	////cout << endl;
+	//out << endl;
+	//out << "Total number of words which are unique: " << counter << endl;
+	
+	out << BContainer.size() << endl;
+	iter = BContainer.begin();
+	for (; iter != BContainer.end(); iter++)
+	{
+		UniToChar(iter->first, tmp);
+		//cout << tmp << ": " << iter->second << ",";
+		out << tmp << " " << log(double(iter->second*1.0 / totalWord)) << endl;
+	}
+	//cout << endl;
+
+	out << MContainer.size() << endl;
+	iter = MContainer.begin();
+	for (; iter != MContainer.end(); iter++)
+	{
+		UniToChar(iter->first, tmp);
+		//cout << tmp << ": " << iter->second << ",";
+		out << tmp << " " << log(double(iter->second*1.0 / totalWord)) << endl;
+	}
+	//cout << endl;
+
+	out << EContainer.size() << endl;
+	iter = EContainer.begin();
+	for (; iter != EContainer.end(); iter++)
+	{
+		UniToChar(iter->first, tmp);
+		//cout << tmp << ": " << iter->second << ",";
+		out << tmp << " " << log(double(iter->second*1.0 / totalWord)) << endl;
+	}
+	//cout << endl;
+
+	out << SContainer.size() << endl;
+	iter = SContainer.begin();
+	for (; iter != SContainer.end(); iter++)
+	{
+		UniToChar(iter->first, tmp);
+		//cout << tmp << ": " << iter->second << ",";
+		out << tmp << " " << log(double(iter->second*1.0 / totalWord)) << endl;
+	}
+	//cout << endl;
+
+	//out << endl;
+	//out << totalB << ", " << totalM << ", " << totalE << ", " << totalS << ", " << endl;
+	//out << "	" << "B" << "	" << "M" << "	" << "E" << "	" << "S" << endl;
+	//out << "B	" << "0	" << totalBM << "	" << totalBE << "	" << "0" << endl;
+	//out << "M	" << "0	" << totalMM << "	" << totalME << "	" << "0" << endl;
+	//out << "E	" << totalEB << "	" << "0	" << "0" << "	" << totalES << endl;
+	//out << "S	" << totalSB << "	" << "0	" << "0" << "	" << totalSS << endl;
+
+	//out << "	" << "B" << "	" << "M" << "	" << "E" << "	" << "S" << endl;
+	//out << "B	" << "0	" << double(totalBM*1.0 / totalB) << "	" << double(totalBE*1.0 / totalB) << "	" << "0" << endl;
+	//out << "M	" << "0	" << double(totalMM*1.0 / totalM) << "	" << double(totalME / totalM) << "	" << "0" << endl;
+	//out << "E	" << double(totalEB*1.0 / totalE) << "	" << "0	" << "0" << "	" << double(totalES*1.0 / totalE) << endl;
+	//out << "S	" << double(totalSB*1.0 / totalS) << "	" << "0	" << "0" << "	" << double(totalSS*1.0 / totalS) << endl;
+
+	//out << "	" << "B" << "	" << "M" << "	" << "E" << "	" << "S" << endl;
+	//out << "B	" << "0	" << log(double(totalBM*1.0 / totalB)) << "	" << log(double(totalBE*1.0 / totalB)) << "	" << "0" << endl;
+	//out << "M	" << "0	" << log(double(totalMM*1.0 / totalM)) << "	" << log(double(totalME*1.0 / totalM)) << "	" << "0" << endl;
+	//out << "E	" << log(double(totalEB*1.0 / totalE)) << "	" << "0	" << "0" << "	" << log(double(totalES*1.0 / totalE)) << endl;
+	//out << "S	" << log(double(totalSB*1.0 / totalS)) << "	" << "0	" << "0" << "	" << log(double(totalSS*1.0 / totalS)) << endl;
+	out << "4"<< endl;
+	out << "0 " << log(double(totalBM*1.0 / totalB)) << " " << log(double(totalBE*1.0 / totalB)) << " 0 " << endl;
+	out << "0 " << log(double(totalMM*1.0 / totalM)) << " " << log(double(totalME*1.0 / totalM)) << " 0 " << endl;
+	out << log(double(totalEB*1.0 / totalE)) << " 0 0 " << log(double(totalES*1.0 / totalE)) << " " << endl;
+	out << log(double(totalSB*1.0 / totalS)) << " 0 0 " << log(double(totalSS*1.0 / totalS)) << " " << endl;
+
+	//out << totalBF << ", " << totalSF << endl;
+	out << "1" << endl;
+	out << log(double(totalBF*1.0 / totalWord)) << " 0 0 " << log(double(totalSF*1.0 / totalWord)) << " " << endl;
 	return;
 }
 
