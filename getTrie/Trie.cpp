@@ -1,6 +1,6 @@
 #include "../h/Trie.h"
 
-#define OUT
+//#define OUT
 //#define OUTSYMBOL
 
 #ifdef OUTSYMBOL
@@ -96,11 +96,8 @@ void Trie::build()		//build up the Trie Tree
 	tmp[2] = 0;
 	vector<Unicode> words;
 
-	//TrieNode *preTrieNode = root;
-	//TrieNode *curTrieNode = NULL;
 	size_t len1 = 0, len2 = 0;
 
-	//ifstream in("testData.txt");
 	ifstream in("trainingData.txt");
 	string container;
 	while (!in.eof())
@@ -113,7 +110,6 @@ void Trie::build()		//build up the Trie Tree
 			{
 				if (container[i + 1] == 'w' && container[i] == '/')
 				{
-					//preTrieNode = root;
 #ifdef OUTSYMBOL
 					insertTrie(words);
 #endif
@@ -125,36 +121,12 @@ void Trie::build()		//build up the Trie Tree
 					if (!words.empty())
 					{
 						totalWords++;	//count the words
-						//curTrieNode = insertTrie(words);
 #ifndef OUTSYMBOL
 						insertTrie(words);
 						len2 = insertWordContainer(words);
 #endif
-						if (len1 == 0)
-						{
-							if (len2 == 1)
-								totalSF++;
-							else
-								totalBF++;
-						}
-						else if (len1 == 1)	//S
-						{
-							if (len2 == 1)	//S->S
-								totalSS++;
-							else			//S->B
-								totalSB++;
-						}
-						else			//E
-						{
-							if (len2 == 1)	//E->S
-								totalES++;
-							else			//E->B
-								totalEB++;
-						}
+						handleBS(len1, len2);
 						len1 = len2;
-						//if (preTrieNode && curTrieNode)		//store the preTrieNode to get the relation in position
-						//	curTrieNode->dataValue.pre.push_back(preTrieNode);
-						//preTrieNode = curTrieNode;
 						words.clear();
 					}
 				}
@@ -170,6 +142,32 @@ void Trie::build()		//build up the Trie Tree
 	}
 	in.close();
 	cout << "Out build" << endl;
+	return;
+}
+
+void Trie::handleBS(size_t len1, size_t len2)
+{
+	if (len1 == 0)
+	{
+		if (len2 == 1)
+			totalSF++;
+		else
+			totalBF++;
+	}
+	else if (len1 == 1)	//S
+	{
+		if (len2 == 1)	//S->S
+			totalSS++;
+		else			//S->B
+			totalSB++;
+	}
+	else			//E
+	{
+		if (len2 == 1)	//E->S
+			totalES++;
+		else			//E->B
+			totalEB++;
+	}
 	return;
 }
 
@@ -287,12 +285,12 @@ size_t Trie::insertWordContainer(const vector<Unicode>& words)
 		insertContainer(words[i], 0);		//Begin
 		totalB++;
 		if (len == 2)
-			totalBE++;
+			totalBE++;			//BE
 		else
 		{
-			totalBM++;
-			totalMM += len - 3;
-			totalME++;
+			totalBM++;			//BM
+			totalMM += len - 3;	//MM
+			totalME++;			//ME
 		}
 		for (i = 1; i < (len - 1); i++)
 		{
@@ -426,9 +424,6 @@ void Trie::showContainer()
 		out << tmp << endl;
 #endif
 	}
-	////cout << endl;
-	//out << endl;
-	//out << "Total number of words which are unique: " << counter << endl;
 
 #ifdef OUT
 	out << BContainer.size() << endl;
@@ -439,7 +434,7 @@ void Trie::showContainer()
 		UniToChar(iter->first, tmp);
 		//cout << tmp << ": " << iter->second << ",";
 #ifdef OUT
-		out << tmp << " " << log(double(iter->second*1.0 / totalWord)) << endl;
+		out << tmp << " " << setprecision(16) << log(double(iter->second*1.0 / totalWord)) << endl;
 #endif
 	}
 	//cout << endl;
@@ -453,7 +448,7 @@ void Trie::showContainer()
 		UniToChar(iter->first, tmp);
 		//cout << tmp << ": " << iter->second << ",";
 #ifdef OUT
-		out << tmp << " " << log(double(iter->second*1.0 / totalWord)) << endl;
+		out << tmp << " " << setprecision(16) << log(double(iter->second*1.0 / totalWord)) << endl;
 #endif
 	}
 	//cout << endl;
@@ -467,7 +462,7 @@ void Trie::showContainer()
 		UniToChar(iter->first, tmp);
 		//cout << tmp << ": " << iter->second << ",";
 #ifdef OUT
-		out << tmp << " " << log(double(iter->second*1.0 / totalWord)) << endl;
+		out << tmp << " " << setprecision(16) << log(double(iter->second*1.0 / totalWord)) << endl;
 #endif
 	}
 	//cout << endl;
@@ -481,40 +476,19 @@ void Trie::showContainer()
 		UniToChar(iter->first, tmp);
 		//cout << tmp << ": " << iter->second << ",";
 #ifdef OUT
-		out << tmp << " " << log(double(iter->second*1.0 / totalWord)) << endl;
+		out << tmp << " " << setprecision(16) << log(double(iter->second*1.0 / totalWord)) << endl;
 #endif
 	}
-	//cout << endl;
 
-	//out << endl;
-	//out << totalB << ", " << totalM << ", " << totalE << ", " << totalS << ", " << endl;
-	//out << "	" << "B" << "	" << "M" << "	" << "E" << "	" << "S" << endl;
-	//out << "B	" << "0	" << totalBM << "	" << totalBE << "	" << "0" << endl;
-	//out << "M	" << "0	" << totalMM << "	" << totalME << "	" << "0" << endl;
-	//out << "E	" << totalEB << "	" << "0	" << "0" << "	" << totalES << endl;
-	//out << "S	" << totalSB << "	" << "0	" << "0" << "	" << totalSS << endl;
-
-	//out << "	" << "B" << "	" << "M" << "	" << "E" << "	" << "S" << endl;
-	//out << "B	" << "0	" << double(totalBM*1.0 / totalB) << "	" << double(totalBE*1.0 / totalB) << "	" << "0" << endl;
-	//out << "M	" << "0	" << double(totalMM*1.0 / totalM) << "	" << double(totalME / totalM) << "	" << "0" << endl;
-	//out << "E	" << double(totalEB*1.0 / totalE) << "	" << "0	" << "0" << "	" << double(totalES*1.0 / totalE) << endl;
-	//out << "S	" << double(totalSB*1.0 / totalS) << "	" << "0	" << "0" << "	" << double(totalSS*1.0 / totalS) << endl;
-
-	//out << "	" << "B" << "	" << "M" << "	" << "E" << "	" << "S" << endl;
-	//out << "B	" << "0	" << log(double(totalBM*1.0 / totalB)) << "	" << log(double(totalBE*1.0 / totalB)) << "	" << "0" << endl;
-	//out << "M	" << "0	" << log(double(totalMM*1.0 / totalM)) << "	" << log(double(totalME*1.0 / totalM)) << "	" << "0" << endl;
-	//out << "E	" << log(double(totalEB*1.0 / totalE)) << "	" << "0	" << "0" << "	" << log(double(totalES*1.0 / totalE)) << endl;
-	//out << "S	" << log(double(totalSB*1.0 / totalS)) << "	" << "0	" << "0" << "	" << log(double(totalSS*1.0 / totalS)) << endl;
 #ifdef OUT
 	out << "4"<< endl;
-	out << "-3.14e+100 " << log(double(totalBM*1.0 / totalB)) << " " << log(double(totalBE*1.0 / totalB)) << " -3.14e+100 " << endl;
-	out << "-3.14e+100 " << log(double(totalMM*1.0 / totalM)) << " " << log(double(totalME*1.0 / totalM)) << " -3.14e+100 " << endl;
-	out << log(double(totalEB*1.0 / totalE)) << " -3.14e+100 -3.14e+100 " << log(double(totalES*1.0 / totalE)) << " " << endl;
-	out << log(double(totalSB*1.0 / totalS)) << " -3.14e+100 -3.14e+100 " << log(double(totalSS*1.0 / totalS)) << " " << endl;
+	out << "-3.14e+100 " << setprecision(16) << log(double(totalBM*1.0 / totalB)) << " " << setprecision(16) << log(double(totalBE*1.0 / totalB)) << " -3.14e+100 " << endl;
+	out << "-3.14e+100 " << setprecision(16) << log(double(totalMM*1.0 / totalM)) << " " << setprecision(16) << log(double(totalME*1.0 / totalM)) << " -3.14e+100 " << endl;
+	out << setprecision(16) << log(double(totalEB*1.0 / totalE)) << " -3.14e+100 -3.14e+100 " << setprecision(16) << log(double(totalES*1.0 / totalE)) << " " << endl;
+	out << setprecision(16) << log(double(totalSB*1.0 / totalS)) << " -3.14e+100 -3.14e+100 " << setprecision(16) << log(double(totalSS*1.0 / totalS)) << " " << endl;
 
-	//out << totalBF << ", " << totalSF << endl;
 	out << "1" << endl;
-	out << log(double(totalBF*1.0 / totalWord)) << " -3.14e+100 -3.14e+100 " << log(double(totalSF*1.0 / totalWord)) << " " << endl;
+	out << setprecision(16) << log(double(totalBF*1.0 / totalWord)) << " -3.14e+100 -3.14e+100 " << setprecision(16) << log(double(totalSF*1.0 / totalWord)) << " " << endl;
 #endif
 	return;
 }
