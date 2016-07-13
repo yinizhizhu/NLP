@@ -1,6 +1,6 @@
 #include "../h/Trie.h"
 
-//#define OUT
+#define OUT
 //#define OUTSYMBOL
 
 #ifdef OUTSYMBOL
@@ -91,6 +91,7 @@ Trie::~Trie()	// free the room
 
 void Trie::build()		//build up the Trie Tree
 {
+	cout << "In build" << endl;
 	char tmp[3];
 	tmp[2] = 0;
 	vector<Unicode> words;
@@ -168,6 +169,38 @@ void Trie::build()		//build up the Trie Tree
 		}
 	}
 	in.close();
+	cout << "Out build" << endl;
+	return;
+}
+
+void Trie::addDict()
+{
+	cout << "In addDict" << endl;
+	char tmp[3];
+	tmp[2] = 0;
+	vector<Unicode> words;
+
+	ifstream in("dictTrain.txt");
+	string container;
+	while (!in.eof())
+	{
+		getline(in, container);
+		for (size_t i = 0; i < container.size();)
+		{
+			tmp[0] = container[i];
+			tmp[1] = container[i + 1];
+			words.push_back(charToUni(tmp));
+			i += 2;
+			if (0 == getSerialOne(container[i]))
+				break;
+		}
+		insertTrie(words);
+		totalWords++;
+		totalWord += insertWordContainer(words);
+		words.clear();
+	}
+	in.close();
+	cout << "out addDict" << endl;
 	return;
 }
 

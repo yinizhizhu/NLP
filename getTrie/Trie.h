@@ -40,6 +40,7 @@ public:
 	~Trie();
 public:
 	void build();
+	void addDict();
 	TrieNode* findTrieNode(const vector<Unicode>& words);
 	//TrieNode* insertTrie(const vector<Unicode>& words);
 	void insertTrie(const vector<Unicode>& words);

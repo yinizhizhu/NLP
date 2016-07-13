@@ -1,6 +1,7 @@
 #include "../h/Segment.h"
 
 ofstream segOut("RESULT/segOut.txt");
+ofstream unkonwn("RESULT/unknown.txt");
 
 seg::seg()
 {
@@ -27,11 +28,10 @@ seg::~seg()
 
 void seg::control()
 {
-	cout << "In control" << endl;
 	ifstream in("dev.txt");
 	//ifstream in("devTest.txt");
 
-	size_t i, j, len;
+	size_t i, len, lineLen;
 	string container;
 
 	char tmp[3];
@@ -43,7 +43,8 @@ void seg::control()
 	while (!in.eof())
 	{
 		getline(in, container);
-		for (i = 0; i < container.size();)
+		lineLen = container.size();
+		for (i = 0; i < lineLen;)
 		{
 			tmp[0] = container[i];
 			tmp[1] = container[i + 1];
@@ -52,10 +53,13 @@ void seg::control()
 			len = findSymbol(one);
 			if (len)
 			{
-				eachWords(words, state);
-				for (j = 0; j < (len * 2); j++)
-					segOut << container[i + j];
-				segOut << '/';
+				if (!words.empty())
+				{
+					eachWords(words, state);
+				}
+				//for (size_t j = 0; j < (len * 2) && (i + j) < lineLen; j++)
+				//	segOut << container[i + j];
+				//segOut << '/';
 				i += len * 2;
 			}
 			else
@@ -65,10 +69,10 @@ void seg::control()
 			}
 		}
 		if (!words.empty())
+		{
 			eachWords(words, state);
-		segOut << endl;
+		}
 	}
-	cout << "Out control" << endl;
 
 	in.close();
 }
@@ -81,18 +85,26 @@ void seg::eachWords(vector<Unicode>& words, vector<char>& state)
 	{
 		divider(words, state);
 
+		//for (j = 0; j < state.size(); j++)
+		//	cout << state[j];
+		//cout << endl;
+
 		UniToChar(words[0], tmp);
 		segOut << tmp;
 		if (state[0] == 'S')
 		{
-			segOut << '/';
+			//segOut << '/';
+			segOut << endl;
 		}
 		for (j = 1; j < state.size(); j++)
 		{
 			UniToChar(words[j], tmp);
 			segOut << tmp;
 			if (state[j] == 'E' || state[j] == 'S')
-				segOut << '/';
+			{
+				//segOut << '/';
+				segOut << endl;
+			}
 		}
 		words.clear();
 		state.clear();
@@ -102,6 +114,8 @@ void seg::eachWords(vector<Unicode>& words, vector<char>& state)
 
 void seg::divider(vector<Unicode>& words, vector<char>& state)
 {
+	//cout << "In Divider: ";
+
 	char tmp[3];
 	tmp[2] = 0;
 
@@ -113,20 +127,28 @@ void seg::divider(vector<Unicode>& words, vector<char>& state)
 	all.resize(len);
 	state.resize(len);
 
-	vector<double> prob;
+	vector<double> prob;	//store the each 4 prob to select the best one
 	prob.resize(4);
 
+	iter = emitM.find(words[0]);
+	if (iter == emitM.end())
+	{
+		UniToChar(words[0], tmp);
+		//cout << "1.Cannot find the word: " << tmp << endl;
+		unkonwn << tmp << endl;
+		vector<double> newOne;
+		for (j = 0; j < 4; j++)
+			newOne.push_back(-15);
+		emitM.insert(unordered_map<Unicode, vector<double>>::value_type(words[0], newOne));
+		iter = emitM.find(words[0]);
+	}
 	for (i = 0; i < 4; i++)
 	{
-		iter = emitM.find(words[0]);
-		if (iter == emitM.end())
-		{
-			UniToChar(words[i], tmp);
-			cout << "Cannot find the word: " << tmp << endl;
-			return;
-		}
-		all[0].bestPro[i] = initM[i] * iter->second[i];
-		//cout << all[0].bestSel[i] <<" ";//for test
+		if (initM[i] != -NOT)
+			all[0].bestPro[i] = initM[i] * iter->second[i];
+		else
+			all[0].bestPro[i] = NOT;
+		//cout << "<" << all[0].bestSel[i] << "> " << all[0].bestPro[i] << "=";//for test
 	}
 	//cout << endl;//for test
 
@@ -136,22 +158,22 @@ void seg::divider(vector<Unicode>& words, vector<char>& state)
 		if (iter == emitM.end())
 		{
 			UniToChar(words[i], tmp);
-			cout << "Cannot find the word: " << tmp << endl;
-			return;
+			//cout << "2.Cannot find the word: " << tmp << endl;
+			unkonwn << tmp << endl;
+			vector<double> newOne;
+			for (j = 0; j < 4; j++)
+				newOne.push_back(-15);
+			emitM.insert(unordered_map<Unicode, vector<double>>::value_type(words[i], newOne));
+			iter = emitM.find(words[i]);
 		}
 		for (j = 0; j < 4; j++)	//the cur word
 		{
 			for (k = 0; k < 4; k++)	//the pre word
-				prob[k] = 1000 * all[i - 1].bestPro[k] * probM[k][j] * iter->second[j];
-			if (j == 0 || j == 1)	//B	M	->	M	E
 			{
-				prob[1] /= 1000;
-				prob[2] /= 1000;
-			}
-			else					//E	S	->	B	S
-			{
-				prob[0] /= 1000;
-				prob[3] /= 1000;
+				if (all[i - 1].bestPro[k] != NOT)
+					prob[k] = all[i - 1].bestPro[k] * probM[k][j] * iter->second[j] / 10;
+				else
+					prob[k] = NOT;
 			}
 
 			bestIndex = 0;			//get the best one( Dynamic )
@@ -162,30 +184,24 @@ void seg::divider(vector<Unicode>& words, vector<char>& state)
 			}
 			all[i].bestSel[j] = bestIndex;
 			all[i].bestPro[j] = prob[bestIndex];
-			//cout << all[i].bestSel[j] << " ";	//for test
+
+			//cout << "<" << all[i].bestSel[j] << "> " << all[i].bestPro[j] << "--";	//for test
 		}
-		//cout << endl;	//for test
+		//cout << endl;//for test
+	}
+
+	if (len == 1)
+	{
+		state[0] = 'S';
+		//cout << "Out Divider" << endl;
+		return;
 	}
 
 	bestIndex = 2;	//E
-	if (all[len - 1].bestPro[3] < all[len - 1].bestPro[3])	//S
+	if (all[len - 1].bestPro[3] < all[len - 1].bestPro[2])	//S
 			bestIndex = 3;
-	//for (i = 0; i < 4; i++)
-	//	cout << all[len - 1].bestPro[i] << " ";
-	//cout << endl;
 
-	//cout << len-1 << ":¡¡" << bestIndex << " " << all[len - 1].bestPro[bestIndex] << " " << all[len - 1].bestSel[bestIndex] << endl;
 	state[len - 1] = initState[bestIndex];
-	if (state[len - 1] == 'B')
-	{
-		state[len - 1] = 'S';
-		bestIndex = 3;
-	}
-	else if (state[len - 1] == 'M')
-	{
-		state[len - 1] = 'E';
-		bestIndex = 2;
-	}
 	for (i = len - 2;; i--)
 	{
 		bestIndex = all[i + 1].bestSel[bestIndex];
@@ -215,7 +231,7 @@ void seg::divider(vector<Unicode>& words, vector<char>& state)
 		if (i == 0)
 			break;
 	}
-	cout << "Out divider" << endl;
+	//cout << "Out Divider" << endl;
 	return;
 }
 
@@ -241,22 +257,22 @@ void seg::readData()
 		word = charToUni(tmp);
 		vector<double> newOne;
 		for (j = 0; j < 4; j++)
-			newOne.push_back(-3.14e+100);
+			newOne.push_back(-15);
 		emitM.insert(unordered_map<Unicode, vector<double>>::value_type(word, newOne));
 	}
 
 	for (k = 0; k < 4; k++)		//read the data which will be insert into the emitM Matrix
-	{
+	{	//read the state:
+		/*
+		0 - B
+		1 - M
+		2 - E
+		3 - S
+		*/
 		getline(in, container);
 		len = atoi(container.c_str());
 		for (i = 0; i < len; i++)
-		{	//read the state:
-			/*
-			0 - B
-			1 - M
-			2 - E
-			3 - S
-			*/
+		{
 			getline(in, container);
 			tmp[0] = container[0];
 			tmp[1] = container[1];
@@ -264,7 +280,7 @@ void seg::readData()
 			iter = emitM.find(word);
 			if (iter == emitM.end())
 			{
-				cout << "No the word in emitM: " << tmp << endl;
+				cout << "3.No the word in emitM: " << tmp << endl;
 				continue;
 			}
 			for (j = 3; j < container.size(); j++)
@@ -398,5 +414,17 @@ void seg::showState()
 	for (size_t i = 0; i < 4; i++)
 		cout << initState[i];
 	cout << endl;
+	return;
+}
+
+void seg::showWords(vector<Unicode>& words)
+{
+	char tmp[3];
+	size_t i, len = words.size();
+	for (i = 0; i < len; i++)
+	{
+		UniToChar(words[i], tmp);
+		cout << tmp;
+	}
 	return;
 }

@@ -2,6 +2,9 @@
 #define SEGMENT_H
 
 #include "Trie.h"
+#define NOT 3.14e+100
+
+using namespace std;
 
 typedef struct segNode
 {
@@ -29,6 +32,7 @@ public:
 	void showProbM();
 	void showEmitM();
 	void showState();
+	void showWords(vector<Unicode>& words);
 private:
 	vector<char> initState;
 	vector<double> initM;

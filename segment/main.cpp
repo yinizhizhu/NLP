@@ -16,16 +16,17 @@ int main()
 	time_t start, end;
 	start = time(NULL);
 
-	//Trie test;
-	//test.build();
+	Trie test;
+	test.build();
+	//test.addDict();
 	//vector<TrieNode*> words;
 	//test.showTrie(NULL, words);
-	//test.showContainer();
+	test.showContainer();
 
-	seg test;
-	test.readData();
-	test.readSymbol();
-	test.control();
+	//seg test;
+	//test.readData();
+	//test.readSymbol();
+	//test.control();
 	//test.showInitM();
 	//test.showProbM();
 	//test.showEmitM();
