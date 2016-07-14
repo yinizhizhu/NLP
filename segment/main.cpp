@@ -16,21 +16,21 @@ int main()
 	time_t start, end;
 	start = time(NULL);
 
-	Trie test;
-	test.build();
-	//test.addDict();
+	//Trie t;
+	//t.build();
+	//t.addDict();
 	//vector<TrieNode*> words;
 	//test.showTrie(NULL, words);
-	test.showContainer();
+	//t.showContainer();
 
-	//seg test;
-	//test.readData();
-	//test.readSymbol();
-	//test.control();
-	//test.showInitM();
-	//test.showProbM();
-	//test.showEmitM();
-	//test.showState();
+	seg s;
+	s.readData();
+	s.readSymbol();
+	s.control();
+	//s.showInitM();
+	//s.showProbM();
+	//s.showEmitM();
+	//s.showState();
 
 	end = time(NULL);
 	cout << "The running time is: " << difftime(end, start) << "s" << endl;

@@ -82,9 +82,6 @@ Trie::~Trie()	// free the room
 #ifdef OUTSYMBOL
 	outSymbol.close();
 #endif
-#ifdef OUT
-	out.close();
-#endif
 	cout << "Out delete Trie" << endl;
 	return;
 }
@@ -193,12 +190,124 @@ void Trie::addDict()
 				break;
 		}
 		insertTrie(words);
-		totalWords++;
-		totalWord += insertWordContainer(words);
 		words.clear();
 	}
 	in.close();
 	cout << "out addDict" << endl;
+	return;
+}
+
+size_t Trie::getDepth(vector<Unicode>& words, size_t start)
+{
+	TrieNode *move = root;
+	size_t i, counter, maxC, len = words.size();
+
+	maxC = counter = 0;
+	for (i = start; i < len; i++)
+	{
+		move = move->findNext(words[i]);
+		if (move == NULL)
+		{
+			return maxC;
+		}
+		counter++;
+		if (move->dataValue.counter > 0)
+			maxC = counter;
+	}
+	return maxC;
+}
+
+bool Trie::checkI(size_t i, size_t lenI, vector<size_t>& posContainer)
+{
+	size_t tmpI;
+	size_t move = 0, len = posContainer.size();
+	for (; move < len; move++)
+	{
+		tmpI = posContainer[move];
+		if (i < tmpI && (i + lenI) > tmpI)
+				return false;
+	}
+	return true;
+}
+
+void Trie::opWithMaxLen(vector<size_t>& maxLen)
+{
+	set<size_t>::iterator iter;
+	set<size_t> index;
+
+	vector<size_t> posContainer;
+	size_t maxP;
+	size_t i, tmpI, len = maxLen.size();
+
+	for (i = 0; i < len; i++)
+		index.insert(i);
+
+	while (!index.empty())
+	{
+		maxP = 10000;
+		iter = index.begin();
+		for (; iter != index.end(); iter++)
+		{
+			tmpI = *iter;
+			if (checkI(tmpI, maxLen[tmpI], posContainer))
+			{
+				if (maxP == 10000)
+				{
+					maxP = tmpI;
+				}
+				else
+				{
+					if (maxLen[tmpI] > maxLen[maxP])
+						maxP = tmpI;
+				}
+			}
+		}
+		if (maxP == 10000 || maxLen[maxP] < 2)
+			return;
+		posContainer.push_back(maxP);
+		for (i = 1; i < maxLen[maxP]; i++)
+		{
+			maxLen[maxP + i] = 0;
+			index.erase(maxP + i);
+		}
+		index.erase(maxP);	//delete the index from the ready set
+	}
+	return;
+}
+
+void Trie::opWithDict(vector<Unicode>& words, vector<char>& state)
+{
+	vector<size_t> maxLen;
+	size_t i, j, len = state.size();
+	
+	for (i = 0; i < len; i++)
+	{
+		maxLen.push_back(getDepth(words, i));
+	}
+
+	opWithMaxLen(maxLen);
+
+	for (i = 0; i < len;)
+	{
+		if (maxLen[i] > 2)
+		{
+			state[i] = 'B';
+			for (j = 1; j < (maxLen[i] - 1); j++)
+				state[i + j] = 'M';
+			state[i + j] = 'E';
+			i += maxLen[i];
+		}
+		else if (maxLen[i] == 2)
+		{
+			state[i] = 'B';
+			state[i + 1] = 'E';
+			i += 2;
+		}
+		else
+		{
+			i++;
+		}
+	}
 	return;
 }
 
@@ -490,6 +599,21 @@ void Trie::showContainer()
 	out << "1" << endl;
 	out << setprecision(16) << log(double(totalBF*1.0 / totalWord)) << " -3.14e+100 -3.14e+100 " << setprecision(16) << log(double(totalSF*1.0 / totalWord)) << " " << endl;
 #endif
+#ifdef OUT
+	out.close();
+#endif
+	return;
+}
+
+void Trie::showWords(vector<Unicode>& words)
+{
+	char tmp[3];
+	size_t i, len = words.size();
+	for (i = 0; i < len; i++)
+	{
+		UniToChar(words[i], tmp);
+		cout << tmp;
+	}
 	return;
 }
 

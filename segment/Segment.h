@@ -39,6 +39,7 @@ private:
 	vector<vector<double>> probM;						//probM: trans matrix
 	unordered_map<Unicode, vector<double>> emitM;		//emitM: emit matrix
 	unordered_map<Unicode, size_t> symbol;				//store all the symbols;
+	Trie dict;
 };
 
 #endif

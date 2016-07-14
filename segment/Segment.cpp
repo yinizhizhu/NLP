@@ -21,6 +21,7 @@ seg::seg()
 		newOne.resize(4);
 		probM.push_back(newOne);
 	}
+	dict.addDict();
 	return;
 }
 
@@ -169,8 +170,8 @@ void seg::control()
 	char tmp[3];
 	tmp[2] = 0;
 	Unicode one;
-	vector<Unicode> words;
 	vector<char> state;
+	vector<Unicode> words;
 
 	while (!in.eof())
 	{
@@ -221,6 +222,8 @@ void seg::eachWords(vector<Unicode>& words, vector<char>& state)
 		//cout << endl;
 
 		divider(words, state);
+
+		dict.opWithDict(words, state);
 
 		//for (j = 0; j < state.size(); j++)	//for test
 		//	cout << state[j];
@@ -340,10 +343,13 @@ void seg::divider(vector<Unicode>& words, vector<char>& state)
 		return;
 	}
 
-	bestIndex = 0;	//E
-	for (i = 1; i < 4; i++)
-		if (all[len - 1].bestPro[i] < all[len - 1].bestPro[bestIndex])	//S
-			bestIndex = i;
+	//bestIndex = 0;	//E
+	//for (i = 1; i < 4; i++)
+	//	if (all[len - 1].bestPro[i] < all[len - 1].bestPro[bestIndex])	//S
+	//		bestIndex = i;
+	bestIndex = 2;	//E
+	if (all[len - 1].bestPro[3] < all[len - 1].bestPro[bestIndex])	//S
+		bestIndex = 3;
 
 	state[len - 1] = initState[bestIndex];
 	for (i = len - 2;; i--)

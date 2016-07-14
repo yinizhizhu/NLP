@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <queue>
+#include <set>
 #include <unordered_map>
 #include <math.h>
 #include <iomanip>
@@ -42,6 +43,10 @@ public:
 	void build();		//build the tree with the training data.
 	void handleBS(size_t len1, size_t len2);	//between the each words or sentences
 	void addDict();		//add the data of dict into the tree
+	size_t getDepth(vector<Unicode>& words, size_t start);
+	bool checkI(size_t i, size_t lenI, vector<size_t>& posContainer);
+	void opWithMaxLen(vector<size_t>& maxLen);
+	void opWithDict(vector<Unicode>& words, vector<char>& state);
 	TrieNode* findTrieNode(const vector<Unicode>& words);		//check whether the words is in the Trie or not.
 	void insertTrie(const vector<Unicode>& words);				//insert the words into the Trie
 	size_t insertWordContainer(const vector<Unicode>& words);	//the statistics of Each parameters: get the various Container
@@ -50,6 +55,7 @@ public:
 	void showTrie(TrieNode *node, vector<TrieNode*>& words);	//show details of each words in Trie
 	void showTrieNode(TrieNode* node);							//servicing on showTrie
 	void showContainer();										//output the main data which will be used at next program.
+	void showWords(vector<Unicode>& words);
 private:
 	TrieNode* root;		//the root of Trie
 
