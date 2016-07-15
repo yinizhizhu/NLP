@@ -9,19 +9,8 @@ typedef unsigned char uint8_t;
 
 int main()
 {
-	//test();
-	//TrieNode test;
-	//cout << test.dataValue.counter << endl;
-
 	time_t start, end;
 	start = time(NULL);
-
-	//Trie t;
-	//t.build();
-	//t.addDict();
-	//vector<TrieNode*> words;
-	//test.showTrie(NULL, words);
-	//t.showContainer();
 
 	seg s;
 	s.readData();
