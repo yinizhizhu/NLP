@@ -27,7 +27,8 @@ public:
 	size_t findSymbol(Unicode word);	//check whether the Word is in the symbol or not
 	void control();		//the controller
 	void eachWords(vector<Unicode>& words, vector<char>& state);	//output the each word according to the state
-	void divider(vector<Unicode>& words, vector<char>& state);		//divider the words with hMM: state store the result of dividing
+	void outPut(vector<Unicode>& words, vector<char>& state);
+	void divider(vector<Unicode>& words, size_t start, size_t tail, vector<char>& state);		//divider the words with hMM: state store the result of dividing
 	void showInitM();	//show the initM
 	void showProbM();	//show the probM
 	void showEmitM();	//show the emitM

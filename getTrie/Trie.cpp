@@ -1,6 +1,6 @@
 #include "../h/Trie.h"
 
-//#define OUT
+#define OUT
 //#define OUTSYMBOL
 
 #ifdef OUTSYMBOL
@@ -278,7 +278,8 @@ void Trie::opWithMaxLen(vector<size_t>& maxLen)
 void Trie::opWithDict(vector<Unicode>& words, vector<char>& state)
 {
 	vector<size_t> maxLen;
-	size_t i, j, len = state.size();
+	size_t i, j, len = words.size();
+	state.resize(len);
 	
 	for (i = 0; i < len; i++)
 	{
@@ -289,7 +290,7 @@ void Trie::opWithDict(vector<Unicode>& words, vector<char>& state)
 
 	for (i = 0; i < len;)
 	{
-		if (maxLen[i] > 2)
+		if (maxLen[i] >= 2)
 		{
 			state[i] = 'B';
 			for (j = 1; j < (maxLen[i] - 1); j++)
@@ -297,17 +298,20 @@ void Trie::opWithDict(vector<Unicode>& words, vector<char>& state)
 			state[i + j] = 'E';
 			i += maxLen[i];
 		}
-		else if (maxLen[i] == 2)
-		{
-			state[i] = 'B';
-			state[i + 1] = 'E';
-			i += 2;
-		}
 		else
 		{
+			state[i] = 'N';
 			i++;
 		}
 	}
+
+	//for (i = 0; i < (len - 1); i++)	//try to opitmise
+	//{
+	//	if (state[i] == 'B' && state[i + 1] == 'B')
+	//		state[i+1] = 'S';
+	//	else if (state[i] == 'E' && state[i + 1] == 'E')
+	//		state[i+1] = 'S';
+	//}
 	return;
 }
 

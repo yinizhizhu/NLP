@@ -5,6 +5,7 @@
 #ifdef GET
 ofstream segOut("RESULT/segOut.txt");		//output the result of segment: each words per line
 ofstream unknown("RESULT/unknown.txt");		//output the word which never appear in the training data
+ofstream stateOut("RESULT/state.txt");		//output the word which never appear in the training data
 #endif
 
 seg::seg()
@@ -21,6 +22,8 @@ seg::seg()
 		newOne.resize(4);
 		probM.push_back(newOne);
 	}
+	dict.build();
+	dict.showContainer();
 	dict.addDict();
 	return;
 }
@@ -214,91 +217,117 @@ void seg::control()
 
 void seg::eachWords(vector<Unicode>& words, vector<char>& state)
 {
-	char tmp[3];
-	size_t j, len = words.size();
+	size_t i, j, len = words.size();
 	if (len > 0)
 	{
-		//showWords(words);	//for test
-		//cout << endl;
+		showWords(words);	//for test
+		stateOut << endl;
 
-		divider(words, state);
+		dict.opWithDict(words, state);	//check in dict firstly and divide the sentence into pieces.
 
-		dict.opWithDict(words, state);
+		for (i = 0; i < len;)
+		{
+			if (state[i] == 'N')
+			{
+				for (j = i + 1; j < len; j++)
+					if (state[j] != 'N')
+						break;
+				divider(words, i, j, state);
+				i = j + 1;
+			}
+			else
+				i++;
+		}
 
-		//for (j = 0; j < state.size(); j++)	//for test
-		//	cout << state[j];
-		//cout << endl;
+		for (j = 0; j < state.size(); j++)	//for test
+			stateOut << state[j];
+		stateOut << endl;
 
-		UniToChar(words[0], tmp);
+		outPut(words, state);
+	}
+	return;
+}
+
+void seg::outPut(vector<Unicode>& words, vector<char>& state)
+{
+	char tmp[3];
+	size_t j, len = words.size();
+	UniToChar(words[0], tmp);
+#ifdef GET
+	segOut << tmp;
+#endif
+	if (state[0] == 'S')
+	{
+		//segOut << '/';
+#ifdef GET
+		segOut << endl;
+#endif
+	}
+	for (j = 1; j < len; j++)
+	{
+		UniToChar(words[j], tmp);
 #ifdef GET
 		segOut << tmp;
 #endif
-		if (state[0] == 'S')
+		if (state[j] == 'E' || state[j] == 'S' || j == (len - 1))
 		{
 			//segOut << '/';
 #ifdef GET
 			segOut << endl;
 #endif
 		}
-		for (j = 1; j < len; j++)
-		{
-			UniToChar(words[j], tmp);
-#ifdef GET
-			segOut << tmp;
-#endif
-			if (state[j] == 'E' || state[j] == 'S' || j == (len-1))
-			{
-				//segOut << '/';
-#ifdef GET
-				segOut << endl;
-#endif
-			}
-		}
-		words.clear();
-		state.clear();
 	}
+	words.clear();
+	state.clear();
 	return;
 }
 
-void seg::divider(vector<Unicode>& words, vector<char>& state)
+void seg::divider(vector<Unicode>& words, size_t start, size_t tail, vector<char>& state)
 {
+	size_t len = tail - start;
+	if (len == 0)
+		return;
+	else if (len == 1)
+	{
+		state[start] = 'S';
+		return;
+	}
+
 	char tmp[3];
 	tmp[2] = 0;
 
 	size_t bestIndex;
 	size_t i, j, k;
-	size_t len = words.size();
 	vector<segNode> all;		//stor all the nodes of segment(words)
 	all.resize(len);
-	state.resize(len);
 	vector<double> prob;	//store the each 4 prob to select the best one
 	prob.resize(4);
 
 	unordered_map<Unicode, vector<double>>::iterator iter;
-	iter = emitM.find(words[0]);
+	iter = emitM.find(words[start]);
 	if (iter == emitM.end())
 	{
-		UniToChar(words[0], tmp);
+		UniToChar(words[start], tmp);
 #ifdef GET
 		unknown << tmp << endl;
 #endif
 		vector<double> newOne;
 		for (j = 0; j < 4; j++)
 			newOne.push_back(-15);
-		emitM.insert(unordered_map<Unicode, vector<double>>::value_type(words[0], newOne));
-		iter = emitM.find(words[0]);
+		emitM.insert(unordered_map<Unicode, vector<double>>::value_type(words[start], newOne));
+		iter = emitM.find(words[start]);
 	}
-	for (i = 0; i < 4; i++)
+	for (j = 0; j < 4; j++)
 	{
-		if (initM[i] != -NOT)
-			all[0].bestPro[i] = initM[i] * iter->second[i] / 10;
+		if (initM[j] != -NOT)
+			all[0].bestPro[j] = initM[j] * iter->second[j] / 10;
 		else
-			all[0].bestPro[i] = NOT;
+			all[0].bestPro[j] = NOT;
 		//cout << "<" << all[0].bestSel[i] << "> " << all[0].bestPro[i] << " &";//for test
 	}
 	//cout << endl;//for test
 
-	for (i = 1; i < len; i++)
+	for (i = start + 1; i < tail; i++)
 	{
 		iter = emitM.find(words[i]);
 		if (iter == emitM.end())
@@ -317,8 +346,8 @@ void seg::divider(vector<Unicode>& words, vector<char>& state)
 		{
 			for (k = 0; k < 4; k++)	//the pre word
 			{
-				if (all[i - 1].bestPro[k] != NOT)
-					prob[k] = all[i - 1].bestPro[k] * probM[k][j] * iter->second[j] / 10;
+				if (all[i - start - 1].bestPro[k] != NOT)
+					prob[k] = all[i - start - 1].bestPro[k] * probM[k][j] * iter->second[j] / 10;
 				else
 					prob[k] = NOT;
 			}
@@ -329,19 +358,14 @@ void seg::divider(vector<Unicode>& words, vector<char>& state)
 				if (prob[k] < prob[bestIndex])
 					bestIndex = k;
 			}
-			all[i].bestSel[j] = bestIndex;
-			all[i].bestPro[j] = prob[bestIndex];
+			all[i - start].bestSel[j] = bestIndex;
+			all[i - start].bestPro[j] = prob[bestIndex];
 
 			//cout << "<" << all[i].bestSel[j] << "> " << all[i].bestPro[j] << " &";	//for test
 		}
 		//cout << endl;//for test
 	}
 
-	if (len == 1)
-	{
-		state[0] = 'S';
-		return;
-	}
 
 	//bestIndex = 0;	//E
 	//for (i = 1; i < 4; i++)
@@ -351,33 +375,11 @@ void seg::divider(vector<Unicode>& words, vector<char>& state)
 	if (all[len - 1].bestPro[3] < all[len - 1].bestPro[bestIndex])	//S
 		bestIndex = 3;
 
-	state[len - 1] = initState[bestIndex];
+	state[tail - 1] = initState[bestIndex];
 	for (i = len - 2;; i--)
 	{
-		bestIndex = all[i + 1].bestSel[bestIndex];
-		state[i] = initState[bestIndex];
-		//if (bestIndex == 3 || bestIndex == 2) //the pre: E S
-		//{
-		//	if (state[i + 1] == 'M' || state[i + 1] == 'E')
-		//	{
-		//		state[i] = 'B';
-		//	}
-		//	else
-		//	{
-		//		state[i] = 'S';
-		//	}
-		//}
-		//else								//the next: B M
-		//{
-		//	if (state[i + 1] == 'B' || state[i + 1] == 'S')
-		//	{
-		//		state[i] = 'E';
-		//	}
-		//	else
-		//	{
-		//		state[i] = 'M';
-		//	}
-		//}
+		bestIndex = all[i].bestSel[bestIndex];
+		state[start + i] = initState[bestIndex];
 		if (i == 0)
 			break;
 	}
@@ -447,7 +449,7 @@ void seg::showWords(vector<Unicode>& words)
 	for (i = 0; i < len; i++)
 	{
 		UniToChar(words[i], tmp);
-		cout << tmp;
+		stateOut << tmp;
 	}
 	return;
 }
