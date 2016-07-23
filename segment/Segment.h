@@ -22,6 +22,8 @@ class seg
 public:
 	seg();
 	~seg();
+	void readNum();						//get the number and '-'
+	bool checkNum(Unicode tmp);
 	void readData();					//get the initM, the probM, the emitM from file
 	void readSymbol();					//read the symbol from file
 	size_t findSymbol(Unicode word);	//check whether the Word is in the symbol or not
@@ -34,7 +36,10 @@ public:
 	void showEmitM();	//show the emitM
 	void showState();	//show the state
 	void showWords(vector<Unicode>& words);		//show the word
+	void showNum();
 private:
+	Unicode special;		//handle the symbol "-"
+	vector<Unicode> num;		//hand with the numbers and the %
 	vector<char> initState;								//store all the states
 	vector<double> initM;								//initM: initial matrix
 	vector<vector<double>> probM;						//probM: trans matrix

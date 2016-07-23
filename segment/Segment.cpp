@@ -37,6 +37,42 @@ seg::~seg()
 	return;
 }
 
+void seg::readNum()
+{
+	ifstream in("number.txt");
+	Unicode word;
+
+	char tmp[3];
+	tmp[2] = 0;
+	string container;
+	for (size_t i = 0; i < 16; i++)
+	{
+		getline(in, container);
+
+		tmp[0] = container[0];		//get the first word
+		tmp[1] = container[1];
+		word = charToUni(tmp);
+
+		if (i < 15)
+			num.push_back(word);
+		else
+			special = word;
+	}
+	in.close();
+	return;
+}
+
+bool seg::checkNum(Unicode tmp)
+{
+	Unicode res = tmp - num[0];
+	if (res >= 0 && res < 10)
+		return true;
+	for (size_t i = 10; i < 15; i++)
+		if (num[i] == tmp)
+			return true;
+	return false;
+}
+
 void seg::readData()
 {
 	ifstream in("RESULT/res.txt");
@@ -137,7 +173,7 @@ void seg::readSymbol()
 	char tmp[3], number[9];
 	tmp[2] = 0;
 	string container;
-	for (size_t i = 0; i < 43; i++)
+	for (size_t i = 0; i < 52; i++)
 	{
 		getline(in, container);
 
@@ -193,12 +229,41 @@ void seg::control()
 				{
 					eachWords(words, state);
 				}
+				if (checkNum(one))		//handle with the number, decimal, time
+				{
+					do{
+						segOut << container[i] << container[i + 1];
+						i += 2;
+						if (i >= lineLen || !findSymbol(one))
+							break;
+						tmp[0] = container[i];
+						tmp[1] = container[i + 1];
+						one = charToUni(tmp);
+					} while (checkNum(one));
+					segOut << endl;
+				}
+				else if (one == special)	//handle with the specail symbol '-'
+				{
+					do{
+						segOut << container[i] << container[i + 1];
+						i += 2;
+						if (i >= lineLen)
+							break;
+						tmp[0] = container[i];
+						tmp[1] = container[i + 1];
+						one = charToUni(tmp);
+					} while (one == special);
+					segOut << endl;
+				}
+				else
+				{
 #ifdef GET
-				for (size_t j = 0; j < (len * 2) && (i + j) < lineLen; j++)
-					segOut << container[i + j];
-				segOut << endl;
+					for (size_t j = 0; j < (len * 2) && (i + j) < lineLen; j++)
+						segOut << container[i + j];
+					segOut << endl;
 #endif
-				i += len * 2;
+					i += len * 2;
+				}
 			}
 			else
 			{
@@ -229,10 +294,14 @@ void seg::eachWords(vector<Unicode>& words, vector<char>& state)
 		{
 			if (state[i] == 'N')
 			{
+				state[i] = 'S';			//to get the best score
 				for (j = i + 1; j < len; j++)
+				{
 					if (state[j] != 'N')
 						break;
-				divider(words, i, j, state);
+					state[j] = 'S';		//to get the best score
+				}
+				//divider(words, i, j, state);
 				i = j + 1;
 			}
 			else
@@ -451,5 +520,21 @@ void seg::showWords(vector<Unicode>& words)
 		UniToChar(words[i], tmp);
 		stateOut << tmp;
 	}
+	return;
+}
+
+void seg::showNum()
+{
+	char tmp[3];
+	for (size_t i = 0; i < 12; i++)
+	{
+		UniToChar(num[i], tmp);
+		cout << tmp;
+		//cout << num[i] << endl;
+	}
+	cout << endl;
+
+	UniToChar(special, tmp);	//show the specail symbol
+	cout << tmp << endl;
 	return;
 }

@@ -9,19 +9,30 @@ typedef unsigned char uint8_t;
 
 int main()
 {
-	time_t start, end;
-	start = time(NULL);
+	time_t startI, endI;
+	time_t startR, endR;
+
+	startI = time(NULL);
+	//Trie t;
+	//t.build();
+	//t.showContainer();
 
 	seg s;
 	s.readData();
 	s.readSymbol();
+	s.readNum();
+	//s.showNum();
+	endI = time(NULL);
+	cout << "The initial time is: " << difftime(endI, startI) << "s" << endl;
+	
+	startR = time(NULL);
 	s.control();
 	//s.showInitM();
 	//s.showProbM();
 	//s.showEmitM();
 	//s.showState();
+	endR = time(NULL);
+	cout << "The time of dividing is: " << difftime(endR, startR) << "s" << endl;
 
-	end = time(NULL);
-	cout << "The running time is: " << difftime(end, start) << "s" << endl;
 	return 0;
 }
