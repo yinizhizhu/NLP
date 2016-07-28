@@ -43,9 +43,9 @@ public:
 	void build();		//build the tree with the training data.
 	void handleBS(size_t len1, size_t len2);	//between the each words or sentences
 	void addDict();		//add the data of dict into the tree
-	size_t getDepth(vector<Unicode>& words, size_t start);
+	size_t getDepth(vector<Unicode>& words, vector<size_t>& T, size_t start);
 	bool checkI(size_t i, size_t lenI, vector<size_t>& posContainer);
-	void opWithMaxLen(vector<size_t>& maxLen);
+	void opWithMaxLen(vector<size_t>& maxLen, vector<size_t>& T);
 	void opWithDict(vector<Unicode>& words, vector<char>& state);
 	TrieNode* findTrieNode(const vector<Unicode>& words);		//check whether the words is in the Trie or not.
 	void insertTrie(const vector<Unicode>& words);				//insert the words into the Trie

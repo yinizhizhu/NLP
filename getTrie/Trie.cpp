@@ -93,14 +93,15 @@ void Trie::build()		//build up the Trie Tree
 	tmp[2] = 0;
 	vector<Unicode> words;
 
-	size_t len1 = 0, len2 = 0;
+	size_t len1 = 0, len2 = 0, len;
 
 	ifstream in("trainingData.txt");
 	string container;
 	while (!in.eof())
 	{
 		getline(in, container);
-		for (size_t i = 0; i < container.size();)
+		len = container.size();
+		for (size_t i = 0; i < len;)
 		{
 			tmp[0] = container[i];
 			if (getSerialOne(tmp[0]) == 0)
@@ -127,7 +128,10 @@ void Trie::build()		//build up the Trie Tree
 						words.clear();
 					}
 				}
-				i++;
+				do
+				{
+					i++;
+				} while (getSerialOne(container[i]) == 0 && i < len);
 			}
 			else
 			{
@@ -197,10 +201,10 @@ void Trie::addDict()
 	return;
 }
 
-size_t Trie::getDepth(vector<Unicode>& words, size_t start)
+size_t Trie::getDepth(vector<Unicode>& words, vector<size_t>& T, size_t start)
 {
 	TrieNode *move = root;
-	size_t i, counter, maxC, len = words.size();
+	size_t i, counter, maxC, maxT = 1, len = words.size();
 
 	maxC = counter = 0;
 	for (i = start; i < len; i++)
@@ -208,12 +212,17 @@ size_t Trie::getDepth(vector<Unicode>& words, size_t start)
 		move = move->findNext(words[i]);
 		if (move == NULL)
 		{
+			T[start] = maxT;
 			return maxC;
 		}
 		counter++;
 		if (move->dataValue.counter > 0)
+		{
 			maxC = counter;
+			maxT = move->dataValue.counter;
+		}
 	}
+	T[start] = maxT;
 	return maxC;
 }
 
@@ -230,7 +239,7 @@ bool Trie::checkI(size_t i, size_t lenI, vector<size_t>& posContainer)
 	return true;
 }
 
-void Trie::opWithMaxLen(vector<size_t>& maxLen)
+void Trie::opWithMaxLen(vector<size_t>& maxLen, vector<size_t>& T)
 {
 	set<size_t>::iterator iter;
 	set<size_t> index;
@@ -259,6 +268,13 @@ void Trie::opWithMaxLen(vector<size_t>& maxLen)
 				{
 					if (maxLen[tmpI] > maxLen[maxP])
 						maxP = tmpI;
+					else if (maxLen[tmpI] == maxLen[maxP] && maxLen[tmpI] == 2)
+					{
+						if (T[tmpI] > T[maxP])
+						{
+							maxP = tmpI;
+						}
+					}
 				}
 			}
 		}
@@ -271,22 +287,26 @@ void Trie::opWithMaxLen(vector<size_t>& maxLen)
 			index.erase(maxP + i);
 		}
 		index.erase(maxP);	//delete the index from the ready set
+		if (maxP > 0 && 2 == maxLen[maxP - 1])
+			maxLen[maxP - 1] = 1;
 	}
 	return;
 }
 
 void Trie::opWithDict(vector<Unicode>& words, vector<char>& state)
 {
+	vector<size_t> T;
 	vector<size_t> maxLen;
 	size_t i, j, len = words.size();
+	T.resize(len);
 	state.resize(len);
-	
+
 	for (i = 0; i < len; i++)
 	{
-		maxLen.push_back(getDepth(words, i));
+		maxLen.push_back(getDepth(words, T, i));
 	}
 
-	opWithMaxLen(maxLen);
+	opWithMaxLen(maxLen, T);
 
 	for (i = 0; i < len;)
 	{

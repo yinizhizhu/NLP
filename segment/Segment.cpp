@@ -45,7 +45,7 @@ void seg::readNum()
 	char tmp[3];
 	tmp[2] = 0;
 	string container;
-	for (size_t i = 0; i < 16; i++)
+	for (size_t i = 0; i < 27; i++)
 	{
 		getline(in, container);
 
@@ -53,7 +53,7 @@ void seg::readNum()
 		tmp[1] = container[1];
 		word = charToUni(tmp);
 
-		if (i < 15)
+		if (i < 26)
 			num.push_back(word);
 		else
 			special = word;
@@ -67,7 +67,7 @@ bool seg::checkNum(Unicode tmp)
 	Unicode res = tmp - num[0];
 	if (res >= 0 && res < 10)
 		return true;
-	for (size_t i = 10; i < 15; i++)
+	for (size_t i = 10; i < 26; i++)
 		if (num[i] == tmp)
 			return true;
 	return false;
@@ -200,8 +200,8 @@ size_t seg::findSymbol(Unicode word)
 
 void seg::control()
 {
-	ifstream in("dev.txt");
-	//ifstream in("devTest.txt");
+	//ifstream in("dev.txt");
+	ifstream in("test.txt");
 
 	size_t i, len, lineLen;
 	string container;
