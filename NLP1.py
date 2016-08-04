@@ -6,7 +6,7 @@ class divider():
     def __init__(self):
         self.words = dict()
         self.symbol = dict()
-        self.result = open("1130310119.txt", "w")
+        self.result = open("res.txt", "w")
     
     def readData(self):
         data = open('trainingData.txt', 'r')

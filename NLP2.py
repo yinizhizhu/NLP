@@ -55,13 +55,13 @@ class NLP():
         if tag == '0':
             print "source/dev.txt..."
             source = open("source/dev.txt", "r")
-            rOut = open("result/1130310228dev.txt", "w")
-            print "The result of dividing is stored at 'result/1130310228dev.txt'"
+            rOut = open("result/dev.txt", "w")
+            print "The result of dividing is stored at 'result/dev.txt'"
         else:
             print "source/test.txt..."
             source = open("source/test.txt", "r")
-            rOut = open("result/1130310228.txt", "w")
-            print "The result of dividing is stored at 'result/1130310228.txt'"
+            rOut = open("result/res.txt", "w")
+            print "The result of dividing is stored at 'result/res.txt'"
         for line in source.readlines():
             part = ""
             counter = 0
